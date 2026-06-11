@@ -9,11 +9,12 @@ const log = (msg) => {
 
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+    ? process.env.ALLOWED_ORIGINS.split(",") 
+    : ["http://localhost:5173", "http://127.0.0.1:5173"];
+
 app.use(cors({
-    origin: [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173"
-    ],
+    origin: allowedOrigins,
 }));
 app.use(express.json());
 
@@ -88,7 +89,7 @@ app.post("/chat", async (req, res) => {
                 if (cleanedLine.startsWith("data: ")) {
                     try {
                         const parsedData = JSON.parse(cleanedLine.slice(6));
-                        
+
                         // Handle text delta for Responses API
                         if (parsedData.type === "response.output_text.delta" && parsedData.delta) {
                             res.write(`data: ${JSON.stringify({ text: parsedData.delta })}\n\n`);
@@ -136,7 +137,8 @@ app.post("/chat", async (req, res) => {
     }
 });
 
-app.listen(5001, () => {
-    log("Server listening on port 5001");
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+    log(`Server listening on port ${PORT}`);
     log(`XAI_API_KEY loaded on startup: ${process.env.XAI_API_KEY ? "Yes" : "No"}`);
 });
